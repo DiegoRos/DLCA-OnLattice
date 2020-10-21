@@ -49,6 +49,7 @@ def step(L, particle_list):
     particle = Cluster.firstp[sclust]
     while particle != -1:
         Cluster.grid[particle_list[particle].x, particle_list[particle].y] = -1  # Resets value of previous position to -1
+        Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = -1  # Resets value of previous position to -1
         particle_list[particle].x += dx[dir]
         particle_list[particle].y += dy[dir]
         # All of these ifs are created so that if a particle is to overstep, it wraps around to the other end of the Cluster.
@@ -67,6 +68,7 @@ def step(L, particle_list):
     while particle != -1:
         # Relabels new position to the name of the cluster
         Cluster.grid[particle_list[particle].x, particle_list[particle].y] = sclust
+        Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = particle  # Resets value of previous position to -1
         particle = Cluster.nextp[particle]
 
     particle = Cluster.firstp[sclust]
@@ -95,8 +97,10 @@ def checkCluster(L, particle, particle_list):
         elif py == -1:
             py = L-1
         if Cluster.grid[px, py] != -1 and Cluster.grid[px, py] != Cluster.grid[particle.x, particle.y]:
-            # particle_list[particle.number].addSideParticle()
-            # particle_list[Cluster.grid[px, py]].addSideParticle()
+            # Adds side particle to both particles who joined cluster
+            particle.addSideParticle()
+            particle_list[Cluster.particle_grid[px, py]].addSideParticle()
+
             joinClusters(Cluster.grid[px, py], Cluster.grid[particle.x, particle.y], particle_list)
 
 
@@ -179,54 +183,21 @@ def centerOfMass(L: int, particles: int, *args) -> tuple:
 
 
 # Checks completed cluster to see if cluster has percolated lattice
-# REVIEW AND CHANGE
-"""
-def clusterPercolates(L: int, particle_list: List[Cluster]) -> bool:
-    percolation = False
-    x_percolation = True
-    y_percolation = True
+def clusterPercolates(L: int) -> bool:
+    final_cluster = np.array(Cluster.grid) # Changes final cluster into numpy array
+    column_sum = final_cluster.sum(axis = 0) # Sums of all of the values for every column
+    row_sum = final_cluster.sum(axis = 1) # Sums of all of the values for every row
 
-    i = 0
-    while True:
-        if x_percolation:
-            break_condition_x = False  # Ends one instance of wile and for loop to move on to the next column
-            for j in range(Cluster.cells):  # This exterior for will check in every column space for a row
-                current_kx_left = (j * Cluster.cells) + i
-                for num, particle in enumerate(particle_list):  # Checks every particle for the given column
-                    if particle.k == current_kx_left:
-                        break_condition_x = True  # Breaks loop
-                        break
-                if break_condition_x:
-                    break
+    # Checks row_sum and colum_sum to check if every column has at least 1 particle
+        # ie. if there is at least 1 zero in the row or column
+    x_percolation = all(i > -L for i in column_sum)
+    y_percolation = all(i > -L for i in row_sum)
 
-            if not break_condition_x:
-                x_percolation = False
+    if x_percolation or y_percolation:
+        return True
+    else:
+        return False
 
-        if y_percolation:
-            break_condition_y = False  # Ends one instance of wile and for loop to move on to the next row
-            for j in range(Cluster.cells):  # This exterior for will check in every row space for a column
-                current_ky_bottom = (i * Cluster.cells) + j
-                for num, particle in enumerate(particle_list):
-                    if particle.k == current_ky_bottom:  # Breaks loop
-                        break_condition_y = True
-                        break
-                if break_condition_y:
-                    break
-
-            if not break_condition_y:
-                y_percolation = False
-
-        if x_percolation is False and y_percolation is False:
-            break
-
-        if i > L:
-            percolation = True
-            break
-
-        i += 1
-
-    return percolation
-"""
 
 if __name__ == '__main__':
     pass

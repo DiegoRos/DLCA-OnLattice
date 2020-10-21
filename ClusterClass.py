@@ -25,7 +25,8 @@ class Cluster:
     firstp = []  # Indicates the first particle of the cluster
     nextp = []  # Linked list that will store the consecutive particles of the clusters
     lastp = []  # Final particle in the cluster
-    grid = None # Grid variable will be utilized place and move all particles
+    grid = None # Grid variable will be utilized place and move all particles and will contain all clusters (indexes)
+    particle_grid = None # Grid that contains all particles by number
     mass_list = dict()
     denominator = 0
     A = 0  # Constant of normalization for mass distribuition
@@ -97,7 +98,8 @@ class Cluster:
         cls.firstp = []  # Indicates the first particle of the cluster
         cls.nextp = []  # Linked list that will store the consecutive particles of the clusters
         cls.lastp = []  # Final particle in the cluster
-        cls.grid = None
+        cls.grid = None # Grid variable will be utilized place and move all particles and will contain all clusters (indexes)
+        particle_grid = None  # Grid that contains all particles by number
         cls.mass_list = dict() # Resets dictionary of all masses
         cls.denominator = 0 # Resets denominator of constant of normalization (A)
-        cls.A = 0  # Constant of normalization for mass distribuition
+        cls.A = 0  # Constant of normalization for mass distribution

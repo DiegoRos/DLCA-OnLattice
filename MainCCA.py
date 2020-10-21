@@ -39,6 +39,7 @@ def initialize(L: int, particles: int) -> List[Cluster]:
     # Sets class variables that will be utilized during the
     Cluster.setMassDictionary(particles)
     Cluster.grid = np.full((L, L), -1)
+    Cluster.particle_grid = np.full((L, L), -1)
 
     particle_list = []
     for i in range(particles):
@@ -50,6 +51,7 @@ def initialize(L: int, particles: int) -> List[Cluster]:
                 break
 
         Cluster.grid[x, y] = Cluster.number_of_clusters  # Places particle in the grid
+        Cluster.particle_grid[x, y] = i
 
         # Creates an instance of the Cluster class and creates a "particle"
         particle = Cluster(x, y, i, 1)
@@ -112,10 +114,12 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
         if num_steps % 100 == 0:
             print('Total number of existing Clusters:', Cluster.number_of_clusters)
 
+    print('Total number of existing Clusters:', Cluster.number_of_clusters)
+
     # Plots final result
     plot(lat_size, particles, num_steps)
 
-    # percolation = clusterPercolates(lat_size, particle_list)
+    percolation = clusterPercolates(lat_size)
 
     # Creates animation and deletes all previous images as well.
     if animation:
@@ -130,7 +134,7 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
                 writer.append_data(image)
             os.remove("images/cluster.png")
 
-    # return x, y, percolation
+    return [particle.x for particle in particle_list], [particle.y for particle in particle_list], percolation
 
 
 if __name__ == "__main__":
@@ -138,7 +142,7 @@ if __name__ == "__main__":
     # random.seed(783732)
     main(500, 10000)
     # main(50,200)
-    # main(6, 10)
+    # main(6, 15)
     finish = time.time()
     # Displays in console the time taken to complete the cluster
     print(finish - start)
