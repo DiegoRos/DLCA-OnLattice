@@ -93,7 +93,8 @@ def plot(L, particles, num_steps, animation = False):
 
 
 # Main function, runs entire code and generates a COMPLETE CCA cluster.
-def main(lat_size: int, particles: int, animation = False, images_per_frame = 10) -> Tuple[List, List, List, bool]:
+def main(lat_size: int, particles: int, animation = False, images_per_frame = 10, progress = 1000) \
+        -> Tuple[List, List, List, bool]:
     if animation:
         if not os.path.isdir("images"):
             os.mkdir("images")
@@ -111,7 +112,13 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
                 plot(lat_size, particles, num_steps, animation = animation)
             num_steps += 1
 
-        if num_steps % 100 == 0:
+        if num_steps % progress == 0:
+            x = [particle.x for particle in particle_list]
+            y = [particle.y for particle in particle_list]
+            z = [particle.side_particles for particle in particle_list]
+            perc = Cluster.number_of_clusters / particles
+            np.savetxt(f"Results/{perc:.2f}cluster{lat_size},particle{particles}.csv",
+                       np.column_stack([x, y, z]), delimiter=',')
             print('Total number of existing Clusters:', Cluster.number_of_clusters)
 
     print('Total number of existing Clusters:', Cluster.number_of_clusters)
