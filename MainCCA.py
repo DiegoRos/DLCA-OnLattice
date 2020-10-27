@@ -93,7 +93,7 @@ def plot(L, particles, num_steps, animation = False):
 
 
 # Main function, runs entire code and generates a COMPLETE CCA cluster.
-def main(lat_size: int, particles: int, animation = False, images_per_frame = 10) -> Tuple[List, List, bool]:
+def main(lat_size: int, particles: int, animation = False, images_per_frame = 10) -> Tuple[List, List, List, bool]:
     if animation:
         if not os.path.isdir("images"):
             os.mkdir("images")
@@ -133,8 +133,10 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
             for i in range(15):
                 writer.append_data(image)
             os.remove("images/cluster.png")
-
-    return [particle.x for particle in particle_list], [particle.y for particle in particle_list], percolation
+    x = [particle.x for particle in particle_list]
+    y = [particle.y for particle in particle_list]
+    z = [particle.side_particles for particle in particle_list]
+    return x, y, z, percolation
 
 
 if __name__ == "__main__":
