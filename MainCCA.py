@@ -62,7 +62,19 @@ def initialize(L: int, particles: int) -> List[Cluster]:
         Cluster.setA()
 
         # Checks adjacent spots for particles
-        checkCluster(L, particle, particle_list)
+        possible = checkCluster(L, particle, particle_list)
+        if len(possible) > 0:
+            index = possible[0][1]
+        for part in possible:
+            p = (part[0], index, part[2], part[3])
+            if particle_list[p[0]].side_particles < 2 and particle_list[p[2]].side_particles < 2:
+                # Adds side particle to both particles who joined cluster
+                particle_list[p[0]].addSideParticle()
+                particle_list[p[2]].addSideParticle()
+
+                joinClusters(p[1], p[3], particle_list)
+                if index > p[3]:
+                    index = p[3]
 
     return particle_list
 
@@ -102,6 +114,9 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
             shutil.rmtree('images') # Eliminates existing path with (possible) previous images, will not work if folder open
             os.mkdir('images')
 
+    if not os.path.isdir("Partial Results"):
+        os.mkdir("Partial Results")
+
     particle_list = initialize(lat_size, particles)
 
     num_steps = 0
@@ -116,12 +131,10 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
             x = [particle.x for particle in particle_list]
             y = [particle.y for particle in particle_list]
             z = [particle.side_particles for particle in particle_list]
-            perc = Cluster.number_of_clusters / particles
-            np.savetxt(f"Results/{perc:.2f}cluster{lat_size},particle{particles}.csv",
+            np.savetxt(f"Partial Results/Partialcluster{lat_size}, particle{particles}.csv",
                        np.column_stack([x, y, z]), delimiter=',')
             print('Total number of existing Clusters:', Cluster.number_of_clusters)
 
-    print('Total number of existing Clusters:', Cluster.number_of_clusters)
 
     # Plots final result
     plot(lat_size, particles, num_steps)
@@ -148,10 +161,10 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
 
 if __name__ == "__main__":
     start = time.time()
-    # random.seed(783732)
-    main(500, 10000)
-    # main(50,200)
-    # main(6, 15)
+    random.seed(7837327)
+    # main(500, 10000)
+    main(50,200)
+    # main(6, 15, progress = 1)
     finish = time.time()
     # Displays in console the time taken to complete the cluster
     print(finish - start)

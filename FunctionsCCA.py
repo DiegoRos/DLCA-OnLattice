@@ -46,10 +46,75 @@ def step(L, particle_list):
     dx = (1, 0, -1, 0)
     dy = (0, 1, 0, -1)
     dir = random.randint(0,3)
+    removeFromGrid(L, sclust, dir, particle_list, dx, dy)
+
+    particle = Cluster.firstp[sclust]
+    filled = False
+    while particle != -1:
+        # Checks to see if position is filled
+        if Cluster.grid[particle_list[particle].x, particle_list[particle].y] != -1:
+            filled = True
+            break
+
+        particle = Cluster.nextp[particle]
+
+    if filled:
+        dx_back = (-1, 0, 1, 0)  # Opposite directions to dx
+        dy_back = (0, -1, 0, 1)  # Opposite direcitons to dy
+        particle = Cluster.firstp[sclust]
+        while particle != -1:
+            particle_list[particle].x += dx_back[dir]
+            particle_list[particle].y += dy_back[dir]
+            # All of these ifs are created so that if a particle is to overstep, it wraps around to the other end of the Cluster.
+            if particle_list[particle].x == L:
+                particle_list[particle].x = 0
+            elif particle_list[particle].y == L:
+                particle_list[particle].y = 0
+            elif particle_list[particle].x == -1:
+                particle_list[particle].x = L - 1
+            elif particle_list[particle].y == -1:
+                particle_list[particle].y = L - 1
+
+            particle = Cluster.nextp[particle]
+
+        putBackGrid(L, sclust, particle_list)
+        return particle_list, False
+
+
+    putBackGrid(L, sclust, particle_list)
+
+    possible_particles = [] # List of possible particles
+    particle = Cluster.firstp[sclust]
+    possible_connection = False
+    while particle != -1:
+        # Checks every particle in cluster for neighbor from other cluster
+        possible = checkCluster(L, particle_list[particle], particle_list)
+        possible_particles += possible
+        particle = Cluster.nextp[particle]
+
+    if len(possible_particles) > 0:
+        index = possible_particles[0][1]
+    for part in possible_particles:
+        p = (part[0], index, part[2], part[3])
+        if particle_list[part[0]].side_particles < 2 and particle_list[part[2]].side_particles < 2:
+            # Adds side particle to both particles who joined cluster
+            particle_list[part[0]].addSideParticle()
+            particle_list[part[2]].addSideParticle()
+
+            return_cluster = joinClusters(part[1], part[3], particle_list)
+
+            if return_cluster != p[3]:
+                index = return_cluster
+
+    return particle_list, True
+
+def removeFromGrid(L, sclust, dir, particle_list, dx, dy):
     particle = Cluster.firstp[sclust]
     while particle != -1:
-        Cluster.grid[particle_list[particle].x, particle_list[particle].y] = -1  # Resets value of previous position to -1
-        Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = -1  # Resets value of previous position to -1
+        # Resets value of previous position to -1
+        Cluster.grid[particle_list[particle].x, particle_list[particle].y] = -1
+        # Resets value of previous position to -1
+        Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = -1
         particle_list[particle].x += dx[dir]
         particle_list[particle].y += dy[dir]
         # All of these ifs are created so that if a particle is to overstep, it wraps around to the other end of the Cluster.
@@ -58,32 +123,27 @@ def step(L, particle_list):
         elif particle_list[particle].y == L:
             particle_list[particle].y = 0
         elif particle_list[particle].x == -1:
-            particle_list[particle].x = L-1
+            particle_list[particle].x = L - 1
         elif particle_list[particle].y == -1:
-            particle_list[particle].y = L-1
+            particle_list[particle].y = L - 1
 
         particle = Cluster.nextp[particle]
 
+def putBackGrid(L, sclust, particle_list):
     particle = Cluster.firstp[sclust]
     while particle != -1:
         # Relabels new position to the name of the cluster
         Cluster.grid[particle_list[particle].x, particle_list[particle].y] = sclust
-        Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = particle  # Resets value of previous position to -1
-        particle = Cluster.nextp[particle]
-
-    particle = Cluster.firstp[sclust]
-    while particle != -1:
-        # Checks every particle in cluster for neighbor from other cluster
-        checkCluster(L, particle_list[particle], particle_list)
+        # Resets value of previous position to -1
+        Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = particle
 
         particle = Cluster.nextp[particle]
-
-    return particle_list, True
 
 
 
 # Checks particle to nearby particles (including wrapped borders)
 def checkCluster(L, particle, particle_list):
+    all_possible = []
     dx = (1, 0, -1, 0)
     dy = (0, 1, 0, -1)
     for i, j in zip(dx, dy):
@@ -98,15 +158,17 @@ def checkCluster(L, particle, particle_list):
             py = L-1
         if Cluster.grid[px, py] != -1 and Cluster.grid[px, py] != Cluster.grid[particle.x, particle.y]:
             # Adds side particle to both particles who joined cluster
-            particle.addSideParticle()
-            particle_list[Cluster.particle_grid[px, py]].addSideParticle()
+            p0_num, p0_index = particle.number, particle. index
+            p1_num, p1_index = particle_list[Cluster.particle_grid[px, py]].number, Cluster.grid[px, py]
+            all_possible.append((p0_num, p0_index, p1_num, p1_index))
 
-            joinClusters(Cluster.grid[px, py], Cluster.grid[particle.x, particle.y], particle_list)
+    return all_possible
+
 
 
 # Function in charge of merging the two clusters that have collided in the simulation.
 # Function in charge of merging the two clusters that have collided in the simulation.
-def joinClusters(c1, c2, particle_list):
+def joinClusters(c1: int, c2: int, particle_list) -> int:
     # lc_label = larger cluster label and, sc_label = smaller cluster label
     if particle_list[Cluster.firstp[c1]].mass > particle_list[Cluster.firstp[c2]].mass:
         lc_label = c1
@@ -115,6 +177,7 @@ def joinClusters(c1, c2, particle_list):
         lc_label = c2
         sc_label = c1
 
+    return_cluster = lc_label
     Cluster.changeDenominator(particle_list[Cluster.firstp[lc_label]].mass, particle_list[Cluster.firstp[sc_label]].mass)
     Cluster.changeMassList(particle_list[Cluster.firstp[lc_label]].mass, particle_list[Cluster.firstp[sc_label]].mass)
     # Manipulation of linked lists
@@ -140,9 +203,11 @@ def joinClusters(c1, c2, particle_list):
         particle_list[Cluster.firstp[sc_label]].mass = particle_list[Cluster.number_of_clusters].mass
         Cluster.firstp[sc_label] = Cluster.firstp[Cluster.number_of_clusters]
         Cluster.lastp[sc_label] = Cluster.lastp[Cluster.number_of_clusters]
+        return_cluster = sc_label
 
 
     Cluster.setA()
+    return return_cluster
 
 
 
@@ -179,7 +244,7 @@ def centerOfMass(L: int, particles: int, *args) -> tuple:
     center_x = (theta_x / (2 * np.pi)) * L
     center_y = (theta_y / (2 * np.pi)) * L
 
-    return center_x, center_y
+    return int(center_x), int(center_y)
 
 
 # Checks completed cluster to see if cluster has percolated lattice
@@ -198,6 +263,45 @@ def clusterPercolates(L: int) -> bool:
     else:
         return False
 
+
+# Returns area of square that can envelop entire cluster, NOTE file name must include ".csv"
+    # If the directory the file is in one can ignore the kwarg directory since the base value is the current directory
+def surroundingSquare(lat_size: int, x: List[float], y: List[float], cx = None, cy = None) \
+        -> Tuple[float, float, float, float, List, List]:
+    # Since all files are named "cluster<lat_size>, particle<num_particles>csv" we can utilize regex to find values
+    # of lat_size and num_particles
+
+
+    x, y = moveToCenter(lat_size, x, y, cx, cy)
+
+    return np.amin(x), np.amax(x), np.amin(y), np.amax(y), x, y
+
+
+def moveToCenter(lat_size: int, x: List[float], y: List[float], cx = None, cy = None) -> Tuple[List, List]:
+    if cx is None or cy is None:
+        num_particles = len(x)
+        cx, cy = centerOfMass(lat_size, num_particles, x, y)
+        
+    print(cx, cy)
+
+    move_x = int(np.abs((lat_size / 2) - cx))
+    move_y = int(np.abs((lat_size / 2) - cy))
+
+    for i in range(len(x)):
+        x[i] = x[i] - move_x
+        y[i] = y[i] - move_y
+
+        if x[i] >= lat_size:
+            x[i] = x[i] - lat_size
+        elif x[i] < 0:
+            x[i] = lat_size + x[i]
+
+        if y[i] >= lat_size:
+            y[i] = y[i] - lat_size
+        elif y[i] < 0:
+            y[i] = lat_size + y[i]
+
+    return x, y
 
 if __name__ == '__main__':
     pass

@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import Tuple, List
 from LinearReg import linearReg
-from FunctionsCCA import centerOfMass
+from FunctionsCCA import centerOfMass, surroundingSquare
 
 
 # -----------------------------------------------------------------------------
@@ -28,18 +28,25 @@ from FunctionsCCA import centerOfMass
 # Function that counts the average number of particles per box in different divisions, calculates the size of these boxes,
 # and calculates the amount of boxes that contain particles for a given division size.
 def boxCount(L: int, particles: int, x: List[float], y: List[float]) -> Tuple[list, list, list]:
-    div = 2 # Sets start division
+    div = 4 + (4 * (particles <= 8000)) # Sets start division
     break_condition = 2 + (2 * (L > 100)) # Sets ending place for amount of divisions
     box_count = [] # List containing the amount of boxes with particles
     avg_counts = [] # List containing the amount of particles average per box
     box_size = [] # List containing the size of the current boxes
+    min_x, max_x, min_y, max_y, x, y = surroundingSquare(L, x, y)
     while True: # Emulation of do while loop to calculate individual vales to put into previous lists
         boxcount = 0
-        division = L/div
+        division_x = (max_x - min_x) / div
+        division_y = (max_y - min_y) / div
+        division = (division_x + division_y) / 2
         for i in range(1,div+1):
             for j in range(1,div+1):
+                lower_x = ((i - 1) * division) + min_x
+                upper_x = (i * division) + min_x
+                lower_y = ((j-1) * division) + min_y
+                upper_y = (j * division) + min_y
                 for xi, yi in zip(x, y):
-                    if (i - 1) * division <= xi <= i * division and (j-1)*division <= yi <= j*division:
+                    if lower_x <= xi <= upper_x and lower_y <= yi <= upper_y:
                         boxcount += 1
                         break # If a box contains 1 particle the code can move on to the next
 
@@ -48,7 +55,7 @@ def boxCount(L: int, particles: int, x: List[float], y: List[float]) -> Tuple[li
         avg_counts.append(particles/boxcount)
         box_size.append(division)
 
-        print("{:.3f} divisions with minimum {}".format(division, break_condition))
+        print("{:.3f} divisions with minimum {}".format((division_x + division_y) / 2, break_condition))
         if division < break_condition: # Ends do while loop
             break
 
@@ -118,12 +125,12 @@ def fractalDimension(lat_size: int, particles: int, center_x = None, center_y = 
 
     plt.figure()
     plt.scatter(log_box_size, log_avg_count, c='black', marker='.', label='Values')
-    plt.plot(line_x_box_pcount, line_y_box_pcount, 'g--', label='Aproximation')
+    plt.plot(line_x_box_pcount, line_y_box_pcount, c = 'royalblue', ls = "--", label='Linear Fit')
     plt.title("Plot of Box Size vs Average Particles per Box (In log scale)")
     plt.xlabel("Log Box Size")
     plt.ylabel("Log Average Particles per Box")
     plt.legend()
-    plt.text(0.7 * max(log_box_size), 0.20 * max(log_avg_count),
+    plt.text(0.7 * np.max(log_box_size), 0.2 * np.max(log_avg_count),
              "Ecuation:\ny = {:.3f}x + {:.3f}".format(m_box_pcount, b_box_pcount))
 
     # PLOT BOX_SIZE VS NUMBER OF BOXES
@@ -132,13 +139,13 @@ def fractalDimension(lat_size: int, particles: int, center_x = None, center_y = 
     line_y_boxes = m_boxes * line_x_boxes + b_boxes
 
     plt.figure()
-    plt.scatter(log_box_size, log_box_count, c='black', marker='.', label = 'Values')
-    plt.plot(line_x_boxes, line_y_boxes, 'g--', label = "Aproximation")
+    plt.scatter(log_box_size, log_box_count, c="black", marker='.', label = "Values")
+    plt.plot(line_x_boxes, line_y_boxes, c = "royalblue", ls = "--", label = "Linear Fit")
     plt.title("Plot of Box Size vs Number of Boxes (In log scale)")
     plt.xlabel("Log Box Size")
     plt.ylabel("Log Number of Boxes")
     plt.legend()
-    plt.text(0.25 * max(log_box_size), 0.20 * max(log_avg_count),
+    plt.text(0.7 * np.max(log_box_size), 0.8 * np.max(log_box_count),
              "Ecuation:\ny = {:.3f}x + {:.3f}".format(m_boxes, b_boxes))
 
     # PLOT RADIUS SIZE VS AMOUNT OF PARTICLES IN RAIDUS
@@ -162,7 +169,7 @@ def fractalDimension(lat_size: int, particles: int, center_x = None, center_y = 
 
 if __name__ == '__main__':
     start = time.time()
-    fractalDimension(500, 10000)
+    fractalDimension(500, 1000)
     end = time.time()
     print(end - start)
     plt.show()
