@@ -122,7 +122,7 @@ def step(L, particle_list):
 
     if len(possible_particles) > 0:
         for part in possible_particles:
-            if part[0].side_particles < 2 and part[1].side_particles < 2 and part[0].index != part[1].index:
+            if part[0].side_particles <= Cluster.MAX_Z and part[1].side_particles <= Cluster.MAX_Z and part[0].index != part[1].index:
                 # Adds side particle to both particles who joined cluster
                 part[0].addSideParticle()
                 part[1].addSideParticle()

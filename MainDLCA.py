@@ -37,11 +37,12 @@ from FunctionsDLCA import *  # Imports all functions from FunctionsCCA.py
 # Main Code
 # -----------------------------------------------------------------------------
 # Function that initializes the grid and places all particles in it.
-def initialize(L: int, particles: int) -> List[Cluster]:
+def initialize(L: int, particles: int, MAX_Z: int) -> List[Cluster]:
     # Sets class variables that will be utilized during the
     Cluster.setMassDictionary(particles)
     Cluster.grid = np.full((L, L), -1)
     Cluster.particle_grid = np.full((L, L), -1)
+    Cluster.MAX_Z = MAX_Z
 
     particle_list = []
     for i in range(particles):
@@ -67,7 +68,7 @@ def initialize(L: int, particles: int) -> List[Cluster]:
         possible_particles = checkCluster(L, particle, particle_list)
         if len(possible_particles) > 0:
             for part in possible_particles:
-                if part[0].side_particles < 2 and part[1].side_particles < 2 and part[0].index != part[1].index:
+                if part[0].side_particles < Cluster.MAX_Z and part[1].side_particles < Cluster.MAX_Z and part[0].index != part[1].index:
                     # Adds side particle to both particles who joined cluster
                     part[0].addSideParticle()
                     part[1].addSideParticle()
@@ -103,7 +104,7 @@ def plot(L, particles, num_steps, animation=False):
 
 
 # Main function, runs entire code and generates a COMPLETE CCA cluster.
-def main(lat_size: int, particles: int, animation = False, images_per_frame = 10, progress = 1000) \
+def main(lat_size: int, particles: int, animation = False, images_per_frame = 10, progress = 1000, max_coordination = 5) \
         -> Tuple[List, List, List, bool]:
     if animation:
         if not os.path.isdir("images"):
@@ -115,7 +116,7 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
     if not os.path.isdir("Partial Results"):
         os.mkdir("Partial Results")
 
-    particle_list = initialize(lat_size, particles)
+    particle_list = initialize(lat_size, particles, max_coordination)
 
     num_steps = 0
     while Cluster.number_of_clusters > 1:

@@ -30,6 +30,7 @@ class Cluster:
     mass_list = dict()
     denominator = 0
     A = 0  # Constant of normalization for mass distribuition
+    MAX_Z = 4 # Set maximum coordination number, set to 4 since the maximum is 4
 
     def __init__(self, x: float, y: float, cluster_number: int, mass: int):
         # Instance Variables, every particle that is placed in the lattice will have these variables.
@@ -103,3 +104,4 @@ class Cluster:
         cls.mass_list = dict() # Resets dictionary of all masses
         cls.denominator = 0 # Resets denominator of constant of normalization (A)
         cls.A = 0  # Constant of normalization for mass distribution
+        cls.MAX_Z = 4 # Set maximum coordination number, set to 4 since the maximum is 4
