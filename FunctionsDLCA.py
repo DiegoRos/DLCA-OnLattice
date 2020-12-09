@@ -46,69 +46,6 @@ def step(L, particle_list):
     dx = (1, 0, -1, 0)
     dy = (0, 1, 0, -1)
     dir = random.randint(0,3)
-    removeFromGrid(L, sclust, dir, particle_list, dx, dy)
-
-    particle = Cluster.firstp[sclust]
-    filled = False
-    while particle != -1:
-        # Checks to see if position is filled
-        if Cluster.grid[particle_list[particle].x, particle_list[particle].y] != -1:
-            filled = True
-            break
-
-        particle = Cluster.nextp[particle]
-
-    if filled:
-        dx_back = (-1, 0, 1, 0)  # Opposite directions to dx
-        dy_back = (0, -1, 0, 1)  # Opposite direcitons to dy
-        particle = Cluster.firstp[sclust]
-        while particle != -1:
-            particle_list[particle].x += dx_back[dir]
-            particle_list[particle].y += dy_back[dir]
-            # All of these ifs are created so that if a particle is to overstep, it wraps around to the other end of the Cluster.
-            if particle_list[particle].x == L:
-                particle_list[particle].x = 0
-            elif particle_list[particle].y == L:
-                particle_list[particle].y = 0
-            elif particle_list[particle].x == -1:
-                particle_list[particle].x = L - 1
-            elif particle_list[particle].y == -1:
-                particle_list[particle].y = L - 1
-
-            particle = Cluster.nextp[particle]
-
-        putBackGrid(L, sclust, particle_list)
-        return particle_list, False
-
-
-    putBackGrid(L, sclust, particle_list)
-
-    possible_particles = [] # List of possible particles
-    particle = Cluster.firstp[sclust]
-    possible_connection = False
-    while particle != -1:
-        # Checks every particle in cluster for neighbor from other cluster
-        possible = checkCluster(L, particle_list[particle], particle_list)
-        possible_particles += possible
-        particle = Cluster.nextp[particle]
-
-    if len(possible_particles) > 0:
-        index = possible_particles[0][1]
-    for part in possible_particles:
-        p = (part[0], index, part[2], part[3])
-        if particle_list[part[0]].side_particles < 2 and particle_list[part[2]].side_particles < 2:
-            # Adds side particle to both particles who joined cluster
-            particle_list[part[0]].addSideParticle()
-            particle_list[part[2]].addSideParticle()
-
-            return_cluster = joinClusters(part[1], part[3], particle_list)
-
-            if return_cluster != p[3]:
-                index = return_cluster
-
-    return particle_list, True
-
-def removeFromGrid(L, sclust, dir, particle_list, dx, dy):
     particle = Cluster.firstp[sclust]
     while particle != -1:
         # Resets value of previous position to -1
@@ -117,7 +54,8 @@ def removeFromGrid(L, sclust, dir, particle_list, dx, dy):
         Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = -1
         particle_list[particle].x += dx[dir]
         particle_list[particle].y += dy[dir]
-        # All of these ifs are created so that if a particle is to overstep, it wraps around to the other end of the Cluster.
+        # All of these ifs are created so that if a particle is to overstep,
+        # it wraps around to the other end of the Cluster.
         if particle_list[particle].x == L:
             particle_list[particle].x = 0
         elif particle_list[particle].y == L:
@@ -129,20 +67,73 @@ def removeFromGrid(L, sclust, dir, particle_list, dx, dy):
 
         particle = Cluster.nextp[particle]
 
-def putBackGrid(L, sclust, particle_list):
+    filled = False
+    particle = Cluster.firstp[sclust]
+    while particle != -1:
+        # Checks to see if position is filled
+        if Cluster.grid[particle_list[particle].x, particle_list[particle].y] != -1:
+            filled = True
+            break
+
+        particle = Cluster.nextp[particle]
+
+    if filled:
+        particle = Cluster.firstp[sclust]
+        while particle != -1:
+            particle_list[particle].x -= dx[dir]
+            particle_list[particle].y -= dy[dir]
+            # All of these ifs are created so that if a particle is to overstep,
+            # it wraps around to the other end of the Cluster.
+            if particle_list[particle].x == L:
+                particle_list[particle].x = 0
+            elif particle_list[particle].y == L:
+                particle_list[particle].y = 0
+            elif particle_list[particle].x == -1:
+                particle_list[particle].x = L - 1
+            elif particle_list[particle].y == -1:
+                particle_list[particle].y = L - 1
+
+            # Relabels new position to the name of the cluster
+            Cluster.grid[particle_list[particle].x, particle_list[particle].y] = sclust
+            # Resets value of previous position to -1
+            Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = particle
+
+            particle = Cluster.nextp[particle]
+
+        return particle_list, False
+
     particle = Cluster.firstp[sclust]
     while particle != -1:
         # Relabels new position to the name of the cluster
         Cluster.grid[particle_list[particle].x, particle_list[particle].y] = sclust
         # Resets value of previous position to -1
-        Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = particle
+        Cluster.particle_grid[particle_list[particle].x, particle_list[particle].y] = particle_list[particle].number
 
         particle = Cluster.nextp[particle]
 
+    possible_particles = [] # List of possible particles
+    particle = Cluster.firstp[sclust]
+    possible_connection = False
+    while particle != -1:
+        # Checks every particle in cluster for neighbor from other cluster
+        possible = checkCluster(L, particle_list[particle], particle_list)
+        possible_particles += possible
+        particle = Cluster.nextp[particle]
+
+    if len(possible_particles) > 0:
+        for part in possible_particles:
+            if part[0].side_particles < 2 and part[1].side_particles < 2 and part[0].index != part[1].index:
+                # Adds side particle to both particles who joined cluster
+                part[0].addSideParticle()
+                part[1].addSideParticle()
+
+                joinClusters(part[0].index, part[1].index, particle_list)
+
+    return particle_list, True
 
 
 # Checks particle to nearby particles (including wrapped borders)
-def checkCluster(L, particle, particle_list):
+def checkCluster(L: int, particle, particle_list):
     all_possible = []
     dx = (1, 0, -1, 0)
     dy = (0, 1, 0, -1)
@@ -158,9 +149,9 @@ def checkCluster(L, particle, particle_list):
             py = L-1
         if Cluster.grid[px, py] != -1 and Cluster.grid[px, py] != Cluster.grid[particle.x, particle.y]:
             # Adds side particle to both particles who joined cluster
-            p0_num, p0_index = particle.number, particle. index
-            p1_num, p1_index = particle_list[Cluster.particle_grid[px, py]].number, Cluster.grid[px, py]
-            all_possible.append((p0_num, p0_index, p1_num, p1_index))
+            # p0_num, p0_index = particle.number, particle.index
+            # p1_num, p1_index = particle_list[Cluster.particle_grid[px, py]].number, Cluster.grid[px, py]
+            all_possible.append([particle, particle_list[Cluster.particle_grid[px, py]]])
 
     return all_possible
 
@@ -168,7 +159,7 @@ def checkCluster(L, particle, particle_list):
 
 # Function in charge of merging the two clusters that have collided in the simulation.
 # Function in charge of merging the two clusters that have collided in the simulation.
-def joinClusters(c1: int, c2: int, particle_list) -> int:
+def joinClusters(c1: int, c2: int, particle_list):
     # lc_label = larger cluster label and, sc_label = smaller cluster label
     if particle_list[Cluster.firstp[c1]].mass > particle_list[Cluster.firstp[c2]].mass:
         lc_label = c1
@@ -177,7 +168,6 @@ def joinClusters(c1: int, c2: int, particle_list) -> int:
         lc_label = c2
         sc_label = c1
 
-    return_cluster = lc_label
     Cluster.changeDenominator(particle_list[Cluster.firstp[lc_label]].mass, particle_list[Cluster.firstp[sc_label]].mass)
     Cluster.changeMassList(particle_list[Cluster.firstp[lc_label]].mass, particle_list[Cluster.firstp[sc_label]].mass)
     # Manipulation of linked lists
@@ -203,11 +193,9 @@ def joinClusters(c1: int, c2: int, particle_list) -> int:
         particle_list[Cluster.firstp[sc_label]].mass = particle_list[Cluster.number_of_clusters].mass
         Cluster.firstp[sc_label] = Cluster.firstp[Cluster.number_of_clusters]
         Cluster.lastp[sc_label] = Cluster.lastp[Cluster.number_of_clusters]
-        return_cluster = sc_label
 
 
     Cluster.setA()
-    return return_cluster
 
 
 

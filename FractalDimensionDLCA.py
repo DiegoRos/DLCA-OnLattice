@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from typing import Tuple, List
 from LinearReg import linearReg
-from FunctionsCCA import centerOfMass, surroundingSquare
+from FunctionsDLCA import centerOfMass, surroundingSquare
 
 
 # -----------------------------------------------------------------------------
@@ -96,7 +96,7 @@ def radius(L: int, x: List[float], y: List[float], cx: float, cy: float) -> Tupl
 def fractalDimension(lat_size: int, particles: int, center_x = None, center_y = None) -> float:
     # If entered lat size and particles is not found as a file it will run the main code.
     if not os.path.isfile("cluster"+str(lat_size)+", particle"+str(particles)+".csv"):
-        from MainCCA import main
+        from MainDLCA import main
         main(lat_size, particles)
 
     # Reads created csv file and remembers both columns as x and y

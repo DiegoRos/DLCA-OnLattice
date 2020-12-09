@@ -1,4 +1,4 @@
-from FunctionsCCA import moveToCenter
+from FunctionsDLCA import moveToCenter
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -29,8 +29,8 @@ def plot(lat_size, particles, file_name, center = False):
     plt.imshow(grid, cmap = "Greys", origin='lower')
 
 if __name__ == "__main__":
-    lat_size = 50
-    particles = 200
+    lat_size = 500
+    particles = 10000
     file_name = f"Partial Results/Partialcluster{lat_size}, particle{particles}.csv"
 
     plot(lat_size, particles, file_name)

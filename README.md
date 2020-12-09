@@ -1,21 +1,20 @@
-# CCA Project
+# DLCA Off-Lattice Project
+  ## Author: Diego Rosenberg
 
 ## Description 
-This code generates a CCA cluster through a random collocation of particles and a random movement of these particles (which is dependent on their mass) to generate larger clusters. The movement of these particles is pseodorandom and is dependant on their mass (as would happen in a particle dynamics simulation). Along with this the clusters have the ability to rotate (if a certain condition is met) **future versions** and a particle has a higher chance of sticking far away from the center of mass of the cluster **future versions**. On these clusters we measure their fractal dimension and the probability of the cluster percolating through the lattice.
+This code generates a DLCA cluster through a random collocation of particles and a random movement of these particles (which is dependent on their mass) to generate larger clusters. The movement of these particles is pseodorandom and is dependant on their mass (as would happen in a particle dynamics simulation). Along with this a restriction can be added so that particles can only stick if they have a coordination number of 0 or 1. On these clusters we measure their fractal dimension and the probability of the cluster percolating through the lattice.
 
 ## Code
 This project is divided into three main files in charge of creting the cluster, one for measuring the fractal dimension of resultant clusters and another file responsible for measuring the probability of the cluster percolating.
 
 - Creation of CCA Cluster:
-  - [x] MainCCA.py
-  - [x] FunctionsCCA.py
+  - [x] MainDLCA.py
+  - [x] FunctionsDLCA.py
   - [x] ClusterClass.py
 - Measurment of Fractal Dimension: 
-  - [x] FractalDimensionCCA.py
-- Measurment of Fractal Dimension:
-  - [x] clusterPercolates function in FunctioonsCCA.py 
-- Measurment of Probability of Percolation:
-  - [ ] PercolattionCCA.py
+  - [x] FractalDimensionDLCA.py
+- Measurment of Fractal Percolation:
+  - [x] clusterPercolates function in FunctionsDLCA.py 
 
 ## Files
 ### ClusterClass.py
@@ -117,6 +116,10 @@ This project is divided into three main files in charge of creting the cluster, 
      - **kwargs**: NONE
      - This function joins two clusters utilizing the linked lists found in Cluster class and changes the index of the small cluster to match the index of the larger cluster and sets the new mass of the cluster **(Note: only the first element of the cluster will have the mass of the entire cluster)**, along with this the denominator class variable, and the mass_list class variable in Cluster will be changed accordingly to have the ability to calculate the new A. At the end of the function the new A is set with the changed variables
      - returns None
+    - posParticlesCluster
+      - **args**: index, particle_list
+      - **kwargs**: NONE
+      - This function can be called to retrieve the position of a given cluster index at any point during the simulation. This is utilized to do manipulations over single clusters during the simulation.
     - klist
       - **args**: L, k
       - **kwargs**: NONE
@@ -129,6 +132,22 @@ This project is divided into three main files in charge of creting the cluster, 
       - **kwargs**: NONE
       - This function calculates the center of mass for a cluster existing inside a lattice with periodic boudary conditions utilizing the formula found in article:Calculating Center of Mass in an Unbounded 2D Environment. Authors: Linge Bai and David E. Breen. DOI: 10.1080/2151237X.2008.10129266
       - returns two floating values representing the center of mass in x and the center of mass in y.
+    - clusterPercolates
+      - **args**: L, particle_list
+      - **kwargs**: NONE
+      - This function will check every row and every column of the system to revise if a given cluster percolates the system, if all of the columns are filled by at least one particle the cluster will percolate in x, and if all rows are filled by at least one particle the cluster will percolate in the y direction.
+    - surroundingSquare
+      - **args**: lat_size, x, y
+      - **kwargs**: cx (Default value is None), cy (Default value is None)
+      - This function thakes the lists of x and y, moves the center of mass of this cluster to the center of the lattice and finds a square that can surround the entire cluster. **Note: This function does not take into account periodic boundary conditions.**
+    - moveToCenter
+      - **args**: lat_size, x, y
+      - **kwargs**: cx (Default value is None), cy (Default value is None)
+      - Moves the center of mass of the cluster to the center of the lattice, this can be usefull to plot clusters in a better way.
+    - radiusOfGyration
+      - **args**: lat_size, particles, x, y
+      - **kwargs**: cx (Default value is None), cy (Default value is None)
+      - Utilizing the formula $Rg^2 = \frac{1}{N} \sum_{i = i}^{N}(r_i - r_c)^2$, this function calculates the radius of gyration for any given cluster.
 
 
 ### MainCCA.py:

@@ -24,11 +24,13 @@ import shutil
 import time
 import matplotlib.pyplot as plt
 import imageio
+import random
+import numpy as np
 from typing import Tuple, List
 from matplotlib import cm
 from matplotlib.colors import ListedColormap, LinearSegmentedColormap
 from ClusterClass import Cluster
-from FunctionsCCA import *  # Imports all functions from FunctionsCCA.py
+from FunctionsDLCA import *  # Imports all functions from FunctionsCCA.py
 
 
 # -----------------------------------------------------------------------------
@@ -62,25 +64,21 @@ def initialize(L: int, particles: int) -> List[Cluster]:
         Cluster.setA()
 
         # Checks adjacent spots for particles
-        possible = checkCluster(L, particle, particle_list)
-        if len(possible) > 0:
-            index = possible[0][1]
-        for part in possible:
-            p = (part[0], index, part[2], part[3])
-            if particle_list[p[0]].side_particles < 2 and particle_list[p[2]].side_particles < 2:
-                # Adds side particle to both particles who joined cluster
-                particle_list[p[0]].addSideParticle()
-                particle_list[p[2]].addSideParticle()
+        possible_particles = checkCluster(L, particle, particle_list)
+        if len(possible_particles) > 0:
+            for part in possible_particles:
+                if part[0].side_particles < 2 and part[1].side_particles < 2 and part[0].index != part[1].index:
+                    # Adds side particle to both particles who joined cluster
+                    part[0].addSideParticle()
+                    part[1].addSideParticle()
 
-                joinClusters(p[1], p[3], particle_list)
-                if index > p[3]:
-                    index = p[3]
+                    joinClusters(part[0].index, part[1].index, particle_list)
 
     return particle_list
 
 
 # Function that plots the complete (or incomplete cluster)
-def plot(L, particles, num_steps, animation = False):
+def plot(L, particles, num_steps, animation=False):
     if not animation:
         # Plots final cluster and saves a .csv file and a png for future use
         plt.figure(figsize=(8,8))
@@ -161,10 +159,10 @@ def main(lat_size: int, particles: int, animation = False, images_per_frame = 10
 
 if __name__ == "__main__":
     start = time.time()
-    random.seed(7837327)
-    # main(500, 10000)
-    main(50,200)
-    # main(6, 15, progress = 1)
+    # random.seed(7837326)
+    main(500, 10000)
+    # main(50,200)
+    # main(10, 20)
     finish = time.time()
     # Displays in console the time taken to complete the cluster
     print(finish - start)
